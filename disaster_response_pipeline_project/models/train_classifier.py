@@ -134,30 +134,33 @@ def build_pipeline():
     Build Pipeline function
     
     Output:
-        A Scikit ML Pipeline that process text messages and apply a classifier.
+        A Scikit ML Pipeline that process text messages and apply a classifier and GridSearchCV is used to find the best parameters for the model .
         
     """
     pipeline = Pipeline([
-        ('features', FeatureUnion([
-
-            ('text_pipeline', Pipeline([
-                ('count_vectorizer', CountVectorizer(tokenizer=tokenize)),
-                ('tfidf_transformer', TfidfTransformer())
-            ])),
-
-            ('starting_verb_transformer', StartingVerbExtractor())
+        ('text_pipeline', Pipeline([
+            ('vect', CountVectorizer(tokenizer=tokenize)),
+            ('tfidf', TfidfTransformer())
         ])),
 
-        ('classifier', MultiOutputClassifier(AdaBoostClassifier()))
+        ('clf', MultiOutputClassifier(RandomForestClassifier()))
     ])
+    
+    parameters = {
+        
+       'clf__estimator__min_samples_split': [5,10]
+    }
 
-    return pipeline
+    model = GridSearchCV(pipeline, param_grid=parameters, cv=2)
+    
+
+    return model
 
 def multioutput_fscore(y_true,y_pred,beta=1.0):
     """
     MultiOutput Fscore
     
-    This is a performance metric of my own creation.
+    This is a performance metric.
     It is a sort of geometric mean of the fbeta_score, computed on each label.
     
     It is compatible with multi-label and multi-class problems.
